@@ -140,8 +140,52 @@
             <li><strong>Stages:</strong> Number of stages in the rocket. *Note: Current simulation is for a single stage; input is present for future expansion.*</li>
           </ul>
 
+          ---
+
+          <h3 class="text-xl font-bold mb-2">Key Rocketry Concepts:</h3>
+
+          <h4 class="text-lg font-semibold mb-1">1. Tsiolkovsky Rocket Equation</h4>
+          <p class="mb-2">The fundamental formula for ideal rocket motion, relating the change in velocity to the effective exhaust velocity and the initial and final mass of the rocket:</p>
+          <p class="text-center font-mono bg-gray-700 p-2 rounded text-lg mb-4">
+            <code class="text-blue-300">&Delta;v = I<sub>sp</sub> &times; g<sub>0</sub> &times; ln(m<sub>0</sub> / m<sub>1</sub>)</code>
+          </p>
+          <ul class="list-disc list-inside mb-4">
+            <li><code class="font-mono">I<sub>sp</sub></code> = Specific impulse (s)</li>
+            <li><code class="font-mono">g<sub>0</sub></code> = 9.81 m/s&sup2; (Earth's standard gravity at sea level)</li>
+            <li><code class="font-mono">m<sub>0</sub></code> = Initial total mass (rocket + fuel)</li>
+            <li><code class="font-mono">m<sub>1</sub></code> = Final mass after fuel burn (dry mass of rocket)</li>
+          </ul>
+
+          <h4 class="text-lg font-semibold mb-1">2. Gravity Turn</h4>
+          <p class="mb-4">A technique used to gradually pitch the rocket during ascent, allowing it to use gravity to curve its path efficiently and reach orbit with minimum fuel. This method minimizes structural stress and maximizes fuel efficiency. Our simulator currently models a simplified vertical launch, but the 'Launch Angle' input is available for future expansion into more complex trajectories.</p>
+
+          <h4 class="text-lg font-semibold mb-1">3. Atmospheric Drag</h4>
+          <p class="mb-2">The force of air resistance acting against the rocket's motion. It's modeled using the drag equation:</p>
+          <p class="text-center font-mono bg-gray-700 p-2 rounded text-lg mb-4">
+            <code class="text-blue-300">F<sub>drag</sub> = &frac12; &times; &rho; &times; v&sup2; &times; C<sub>d</sub> &times; A</code>
+          </p>
+          <ul class="list-disc list-inside mb-4">
+            <li><code class="font-mono">&rho;</code> = Air density (kg/m&sup3;)</li>
+            <li><code class="font-mono">v</code> = Velocity of the rocket (m/s)</li>
+            <li><code class="font-mono">C<sub>d</sub></code> = Drag coefficient (dimensionless, accounts for shape)</li>
+            <li><code class="font-mono">A</code> = Cross-sectional area (m&sup2;)</li>
+          </ul>
+          <p class="mb-2">While our current simulation approximates air density as a constant (sea-level value), a more advanced model would use an exponential decay with altitude:</p>
+          <p class="text-center font-mono bg-gray-700 p-2 rounded text-lg mb-4">
+            <code class="text-blue-300">&rho; = &rho;<sub>0</sub> &times; e<sup>-h / H</sup></code>
+          </p>
+          <p class="mb-4">Where <code class="font-mono">&rho;<sub>0</sub></code> is sea-level density, <code class="font-mono">h</code> is altitude, and <code class="font-mono">H</code> is the scale height (approximately 8500 m for Earth's atmosphere).</p>
+
+          <h4 class="text-lg font-semibold mb-1">4. Staging</h4>
+          <p class="mb-4">Multi-stage rockets are designed to increase efficiency by dropping empty fuel tanks and engines (stages) once their propellant is expended. This reduces the overall mass of the rocket, allowing the remaining stages to accelerate more effectively. Our simulator currently focuses on a single-stage rocket, but the 'Stages' input field is included to signify future potential for modeling individual stage masses, ISPs, and burn times.</p>
+
+          <h4 class="text-lg font-semibold mb-1">5. Delta-V Budget</h4>
+          <p class="mb-4">Delta-V (&Delta;v), or "change in velocity," is a critical metric in rocketry. It represents the total amount of velocity change that a rocket can achieve or that is required for a specific maneuver (e.g., reaching orbit). For instance, reaching Low Earth Orbit (LEO) typically requires a &Delta;v of approximately 9400 m/s. Our simulator helps you estimate how much &Delta;v your rocket configuration (based on thrust, ISP, mass, and burn time) can achieve, allowing you to gauge its orbital capability.</p>
+
+          ---
+
           <h3 class="text-xl font-bold mb-2">Simulation Physics (Simplified):</h3>
-          <p class="mb-4">The simulator uses a simplified 1D vertical motion model during powered flight. Key forces considered are:</p>
+          <p class="mb-4">The simulator uses a simplified 1D vertical motion model during powered flight and subsequent ballistic flight. Key forces considered are:</p>
           <ul class="list-disc list-inside mb-4">
             <li><strong>Thrust:</strong> Constant throughout burn.</li>
             <li><strong>Gravity:</strong> Assumed constant ($g_0 = 9.81 m/s^2$).</li>
@@ -223,15 +267,15 @@
         alert("Please enter valid positive numbers for all rocket parameters.");
         return;
       }
-      if (mass >= (mass + fuel)) { // Basic check to ensure fuel mass makes sense
-        alert("Fuel mass must be greater than zero for the simulation to run.");
-        return;
+      if (fuel > 0 && mass >= (mass + fuel)) { // Basic check to ensure fuel mass makes sense
+        alert("Fuel mass must be greater than zero for the simulation to run if you intend a burn.");
+        // If fuel is 0, it means dry mass simulation, which is fine, but if fuel > 0, it must be positive
       }
 
 
       const initialMass = mass + fuel;
       const fuelConsumptionRate = thrust / (isp * g0); // kg/s
-      const burnTime = fuel / fuelConsumptionRate;
+      const burnTime = (fuel > 0) ? fuel / fuelConsumptionRate : 0; // If no fuel, burn time is 0
 
 
       // Basic simulation
@@ -241,12 +285,13 @@
       let currentMass = initialMass;
 
       // Ensure burn time is positive to avoid infinite loops if fuel is 0 or rates are off
-      if (burnTime <= 0) {
+      if (fuel > 0 && burnTime <= 0) {
         alert("Calculated burn time is zero or negative. Please check fuel, ISP, and thrust values.");
         return;
       }
 
-      while (time <= burnTime + dt) { // Simulate slightly past burn time to capture post-burn effects if any
+      // Powered flight phase
+      while (time <= burnTime + dt && currentMass > mass) {
         let currentThrust = (time <= burnTime) ? thrust : 0;
         let massFlowRate = (time <= burnTime) ? fuelConsumptionRate : 0;
 
@@ -267,26 +312,25 @@
         currentMass -= massFlowRate * dt;
         time += dt;
 
-        // Prevent altitude from going below 0 after landing/impact
-        if (altitude < 0 && velocity < 0) {
-            altitude = 0;
-            velocity = 0;
-            acceleration = 0;
-            telemetry.push({ time, velocity: 0, altitude: 0, acceleration: 0 });
-            break; // Stop simulation if rocket hits ground
-        }
-
-
         // Ensure currentMass doesn't go below dry mass
         if (currentMass < mass) {
             currentMass = mass; // Clamp at dry mass
         }
 
         telemetry.push({ time, velocity, altitude, acceleration });
+
+        // Break if it goes below ground during powered ascent (unlikely but good for stability)
+        if (altitude < 0 && velocity < 0) {
+            altitude = 0;
+            velocity = 0;
+            acceleration = 0;
+            telemetry.push({ time, velocity: 0, altitude: 0, acceleration: 0 });
+            break;
+        }
       }
 
       // Continue simulation after burn-out (ballistic flight) until it hits the ground or peak altitude is reached and starts falling significantly
-      while (altitude > 0 && velocity > -50) { // Continue until impact or significant descent
+      while (altitude > 0 || velocity > 0) { // Continue until impact (altitude <= 0) AND velocity is negative/zero
         const rho = 1.225; // Constant air density for simplicity
         const dragForce = 0.5 * rho * velocity ** 2 * cd * area;
         const gravityForce = currentMass * g0; // currentMass is now dry mass
@@ -309,8 +353,12 @@
         telemetry.push({ time, velocity, altitude, acceleration });
 
         // Prevent infinite loops for very high apogees without drag or if simulation is unstable
-        if (time > 3600) { // Max 1 hour simulation
+        if (time > 3600) { // Max 1 hour simulation to prevent runaway
             console.warn("Simulation stopped due to excessive time (over 1 hour).");
+            break;
+        }
+        // If rocket has hit ground and velocity is non-positive, stop
+        if (altitude <= 0 && velocity <= 0 && telemetry.length > 1 && telemetry[telemetry.length-1].altitude === 0) {
             break;
         }
       }
@@ -473,16 +521,13 @@
         doc.text("Telemetry Data (first 50 entries):", 10, yPos); yPos += 7;
         let pageHeight = doc.internal.pageSize.height;
         let lineHeight = 6;
-        let startY = yPos;
-
-        // Add a table-like structure for telemetry
-        let headers = ["Time (s)", "Velocity (m/s)", "Altitude (m)", "Accel (m/s²)"];
-        let columnWidths = [30, 45, 45, 45]; // Adjust as needed
         let startX = 10;
-        let currentX = startX;
+        let columnWidths = [30, 45, 45, 45]; // Adjust as needed
 
         // Draw headers
         doc.setFont('helvetica', 'bold');
+        let currentX = startX;
+        headers = ["Time (s)", "Velocity (m/s)", "Altitude (m)", "Accel (m/s²)"];
         headers.forEach((header, i) => {
             doc.text(header, currentX, yPos);
             currentX += columnWidths[i];
