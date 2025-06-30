@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Rocket Launch Simulator</title>
+  <title>Aerometry - Rocket Launch Simulator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
@@ -15,7 +15,7 @@
 <body class="bg-gray-900 text-white font-sans">
 
   <main class="p-6 max-w-6xl mx-auto">
-    <h1 class="text-3xl font-bold mb-6 text-blue-400">Rocket Launch Simulator</h1>
+    <h1 class="text-3xl font-bold mb-6 text-blue-400">Aerometry - Rocket Launch Simulator</h1>
 
     <div class="mb-6">
       <div class="border-b border-gray-700">
@@ -102,7 +102,7 @@
       <div id="panel-documentation" role="tabpanel" aria-labelledby="tab-documentation" class="tab-panel hidden">
         <h2 class="text-2xl font-bold mb-4 text-blue-300">Documentation</h2>
         <div class="prose prose-invert max-w-none text-gray-300">
-          <h3 class="text-xl font-bold mb-2">Welcome to the Rocket Launch Simulator!</h3>
+          <h3 class="text-xl font-bold mb-2">Welcome to Aerometry - Rocket Launch Simulator!</h3>
           <p class="mb-4">This simulator allows you to model the flight of a single-stage rocket based on key physical parameters. You can observe how changes in mass, thrust, and drag affect the rocket's altitude, velocity, and acceleration over time.</p>
 
           <h3 class="text-xl font-bold mb-2">How to Use:</h3>
@@ -204,6 +204,12 @@
       </div>
     </div>
   </main>
+
+  ---
+
+  <footer class="bg-gray-800 text-gray-400 text-center p-4 mt-8">
+    Developed with <span class="text-red-500">&hearts;</span> by [Your Name Here]
+  </footer>
 
   <script>
     const g0 = 9.81;
@@ -527,7 +533,7 @@
         // Draw headers
         doc.setFont('helvetica', 'bold');
         let currentX = startX;
-        headers = ["Time (s)", "Velocity (m/s)", "Altitude (m)", "Accel (m/s²)"];
+        const headers = ["Time (s)", "Velocity (m/s)", "Altitude (m)", "Accel (m/s²)"];
         headers.forEach((header, i) => {
             doc.text(header, currentX, yPos);
             currentX += columnWidths[i];
