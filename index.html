@@ -2,125 +2,67 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Rocketry Simulator</title>
+  <title>Rocket Launch Simulator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- TailwindCSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
 
-  <!-- Chart.js -->
+  <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- jsPDF and FileSaver -->
+  <!-- jsPDF and FileSaver for export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 </head>
-<body class="bg-gray-900 text-white font-sans min-h-screen">
+<body class="bg-gray-900 text-white font-sans">
 
-  <!-- Navbar -->
-  <nav class="bg-gray-800 p-4 shadow-md">
-    <div class="max-w-7xl mx-auto flex space-x-6 text-lg font-semibold">
-      <button onclick="showTab('simulator')" class="hover:text-blue-400">Simulator</button>
-      <button onclick="showTab('reports')" class="hover:text-blue-400">Reports</button>
-      <button onclick="showTab('compare')" class="hover:text-blue-400">Compare</button>
-      <button onclick="showTab('docs')" class="hover:text-blue-400">Docs</button>
+  <main class="p-6 max-w-5xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6 text-blue-400">Rocket Launch Simulator</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-800 p-6 rounded">
+      <label>Mass (kg)
+        <input type="number" id="mass" step="any" class="p-2 rounded w-full text-black">
+      </label>
+      <label>Fuel Mass (kg)
+        <input type="number" id="fuel" step="any" class="p-2 rounded w-full text-black">
+      </label>
+      <label>ISP (s)
+        <input type="number" id="isp" step="any" class="p-2 rounded w-full text-black">
+      </label>
+      <label>Thrust (N)
+        <input type="number" id="thrust" step="any" class="p-2 rounded w-full text-black">
+      </label>
+      <label>Drag Coefficient
+        <input type="number" id="cd" step="any" class="p-2 rounded w-full text-black">
+      </label>
+      <label>Cross-sectional Area (m²)
+        <input type="number" id="area" step="any" class="p-2 rounded w-full text-black">
+      </label>
+      <label>Launch Angle (°)
+        <input type="number" id="angle" step="any" class="p-2 rounded w-full text-black">
+      </label>
+      <label>Stages
+        <input type="number" id="stages" step="1" class="p-2 rounded w-full text-black">
+      </label>
     </div>
-  </nav>
 
-  <main class="p-6 max-w-6xl mx-auto">
+    <div class="mt-6 flex gap-4 flex-wrap">
+      <button id="simulateBtn" class="bg-blue-600 hover:bg-blue-800 px-4 py-2 rounded">Simulate Launch</button>
+      <button id="saveConfigBtn" class="bg-yellow-600 hover:bg-yellow-800 px-4 py-2 rounded">Save Configuration</button>
+      <button id="exportCsvBtn" class="bg-green-600 hover:bg-green-800 px-4 py-2 rounded">Export CSV</button>
+      <button id="exportPdfBtn" class="bg-purple-600 hover:bg-purple-800 px-4 py-2 rounded">Download PDF</button>
+    </div>
 
-    <!-- Simulator Tab -->
-    <section id="simulator" class="tab">
-      <h1 class="text-3xl font-bold mb-4 text-blue-400">Rocket Launch Simulator</h1>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-800 p-6 rounded">
-        <label>Mass (kg)
-          <input type="number" id="mass" step="any" class="p-2 rounded w-full text-black">
-        </label>
-        <label>Fuel Mass (kg)
-          <input type="number" id="fuel" step="any" class="p-2 rounded w-full text-black">
-        </label>
-        <label>ISP (s)
-          <input type="number" id="isp" step="any" class="p-2 rounded w-full text-black">
-        </label>
-        <label>Thrust (N)
-          <input type="number" id="thrust" step="any" class="p-2 rounded w-full text-black">
-        </label>
-        <label>Drag Coefficient
-          <input type="number" id="cd" step="any" class="p-2 rounded w-full text-black">
-        </label>
-        <label>Cross-sectional Area (m²)
-          <input type="number" id="area" step="any" class="p-2 rounded w-full text-black">
-        </label>
-        <label>Launch Angle (°)
-          <input type="number" id="angle" step="any" class="p-2 rounded w-full text-black">
-        </label>
-        <label>Stages
-          <input type="number" id="stages" step="1" class="p-2 rounded w-full text-black">
-        </label>
-      </div>
-
-      <div class="mt-6 flex gap-4 flex-wrap">
-        <button id="simulateBtn" class="bg-blue-600 hover:bg-blue-800 px-4 py-2 rounded">Simulate Launch</button>
-        <button id="saveConfigBtn" class="bg-yellow-600 hover:bg-yellow-800 px-4 py-2 rounded">Save Configuration</button>
-        <button id="exportCsvBtn" class="bg-green-600 hover:bg-green-800 px-4 py-2 rounded">Export CSV</button>
-        <button id="exportPdfBtn" class="bg-purple-600 hover:bg-purple-800 px-4 py-2 rounded">Download PDF</button>
-      </div>
-
-      <div class="mt-8 bg-gray-800 p-6 rounded">
-        <canvas id="telemetryChart" height="100" class="bg-white p-2 rounded mb-6"></canvas>
-      </div>
-    </section>
-
-    <!-- Reports Tab -->
-    <section id="reports" class="tab hidden">
-      <h2 class="text-2xl font-bold mb-4 text-yellow-400">Saved Configurations</h2>
-      <ul id="reportList" class="space-y-3"></ul>
-    </section>
-
-    <!-- Compare Tab -->
-    <section id="compare" class="tab hidden">
-      <h2 class="text-2xl font-bold mb-4 text-green-400">Configuration Comparison</h2>
-      <table class="w-full table-auto text-white border border-white">
-        <thead>
-          <tr class="bg-gray-700">
-            <th class="border px-2">Timestamp</th>
-            <th class="border px-2">Mass</th>
-            <th class="border px-2">Fuel</th>
-            <th class="border px-2">ISP</th>
-            <th class="border px-2">Thrust</th>
-            <th class="border px-2">Cd</th>
-            <th class="border px-2">Area</th>
-            <th class="border px-2">Angle</th>
-            <th class="border px-2">Stages</th>
-          </tr>
-        </thead>
-        <tbody id="compareTable"></tbody>
-      </table>
-    </section>
-
-    <!-- Docs Tab -->
-    <section id="docs" class="tab hidden">
-      <h2 class="text-2xl font-bold mb-4 text-purple-400">Documentation</h2>
-      <p class="text-lg">
-        This Rocket Launch Simulator models ascent physics using the Tsiolkovsky rocket equation, thrust-to-weight ratio,
-        drag losses, and mass flow over time. It generates telemetry (altitude, velocity) over time and lets you export
-        data in CSV and PDF. You can also save and compare different rocket configurations for analysis.
-      </p>
-    </section>
+    <div class="mt-8 bg-gray-800 p-6 rounded">
+      <canvas id="telemetryChart" height="100" class="bg-white p-2 rounded mb-6"></canvas>
+    </div>
   </main>
 
-  <!-- JavaScript -->
+  <!-- Inline JavaScript -->
   <script>
     const g0 = 9.81;
     let chart;
-
-    function showTab(tabId) {
-      document.querySelectorAll(".tab").forEach(tab => tab.classList.add("hidden"));
-      document.getElementById(tabId).classList.remove("hidden");
-
-      if (tabId === "reports") showReports();
-      if (tabId === "compare") showCompare();
-    }
 
     document.getElementById("simulateBtn").addEventListener("click", () => {
       const mass = parseFloat(document.getElementById("mass").value);
@@ -136,6 +78,7 @@
       const burnTime = (fuel * isp * g0) / thrust;
       const deltaV = isp * g0 * Math.log(initialMass / mass);
 
+      // Basic simulation
       const telemetry = [];
       let time = 0, dt = 0.5;
       let velocity = 0, altitude = 0;
@@ -151,7 +94,7 @@
       }
 
       drawChart(telemetry);
-      window.latestTelemetry = telemetry;
+      window.latestTelemetry = telemetry; // for export
     });
 
     function drawChart(data) {
@@ -167,13 +110,16 @@
           datasets: [{
             label: 'Altitude (m)',
             data: altitudes,
+            backgroundColor: 'rgba(59, 130, 246, 0.2)',
             borderColor: 'rgba(59, 130, 246, 1)',
             borderWidth: 2
           }]
         },
         options: {
           responsive: true,
-          plugins: { legend: { labels: { color: 'black' } } },
+          plugins: {
+            legend: { labels: { color: 'black' } }
+          },
           scales: {
             x: { title: { display: true, text: 'Time (s)', color: 'black' }, ticks: { color: 'black' } },
             y: { title: { display: true, text: 'Altitude (m)', color: 'black' }, ticks: { color: 'black' } }
@@ -184,10 +130,11 @@
 
     document.getElementById("exportCsvBtn").addEventListener("click", () => {
       const data = window.latestTelemetry || [];
-      if (!data.length) return alert("Run simulation first.");
+      if (data.length === 0) return alert("Run simulation first.");
       const rows = data.map(d => `${d.time},${d.velocity},${d.altitude}`);
       const csv = "Time,Velocity,Altitude\n" + rows.join("\n");
-      saveAs(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), "telemetry.csv");
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      saveAs(blob, "telemetry.csv");
     });
 
     document.getElementById("exportPdfBtn").addEventListener("click", () => {
@@ -195,7 +142,7 @@
       const data = window.latestTelemetry || [];
       doc.text("Rocket Telemetry Report", 10, 10);
       data.slice(0, 30).forEach((d, i) => {
-        doc.text(`${d.time}s | V: ${d.velocity.toFixed(2)} m/s | Alt: ${d.altitude.toFixed(2)} m`, 10, 20 + i * 6);
+        doc.text(`${d.time}s  |  V: ${d.velocity.toFixed(2)} m/s  |  Alt: ${d.altitude.toFixed(2)} m`, 10, 20 + i * 6);
       });
       doc.save("report.pdf");
     });
@@ -215,45 +162,6 @@
       localStorage.setItem(`config-${Date.now()}`, JSON.stringify(config));
       alert("Rocket configuration saved!");
     });
-
-    function showReports() {
-      const reportList = document.getElementById("reportList");
-      reportList.innerHTML = "";
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith("config-")) {
-          const config = JSON.parse(localStorage.getItem(key));
-          const item = document.createElement("li");
-          item.className = "p-4 bg-gray-700 rounded";
-          item.textContent = `Mass: ${config.mass} kg, Fuel: ${config.fuel} kg, ISP: ${config.isp}, Thrust: ${config.thrust}, Saved at: ${config.timestamp}`;
-          reportList.appendChild(item);
-        }
-      });
-    }
-
-    function showCompare() {
-      const table = document.getElementById("compareTable");
-      table.innerHTML = "";
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith("config-")) {
-          const c = JSON.parse(localStorage.getItem(key));
-          table.innerHTML += `
-            <tr>
-              <td class="border px-2">${c.timestamp}</td>
-              <td class="border px-2">${c.mass}</td>
-              <td class="border px-2">${c.fuel}</td>
-              <td class="border px-2">${c.isp}</td>
-              <td class="border px-2">${c.thrust}</td>
-              <td class="border px-2">${c.cd}</td>
-              <td class="border px-2">${c.area}</td>
-              <td class="border px-2">${c.angle}</td>
-              <td class="border px-2">${c.stages}</td>
-            </tr>`;
-        }
-      });
-    }
-
-    // Show default tab
-    showTab("simulator");
   </script>
 </body>
 </html>
