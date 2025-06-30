@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Compare Configurations</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-900 text-white font-sans">
+
+  <nav class="bg-gray-800 p-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold text-blue-400">Rocket Config Comparison</h1>
+    <div class="space-x-4">
+      <a href="index.html" class="hover:text-blue-300">Simulator</a>
+      <a href="compare.html" class="hover:text-blue-300 font-semibold underline">Compare</a>
+      <a href="report.html" class="hover:text-blue-300">Reports</a>
+      <a href="docs.html" class="hover:text-blue-300">Docs</a>
+    </div>
+  </nav>
+
+  <main class="p-6 max-w-5xl mx-auto">
+    <h2 class="text-2xl font-semibold mb-4">Select Configurations to Compare</h2>
+    <div id="configList" class="space-y-2 mb-6 text-black"></div>
+
+    <button id="compareBtn" class="bg-blue-600 hover:bg-blue-800 text-white px-4 py-2 rounded">Compare Selected</button>
+
+    <section class="mt-10">
+      <h2 class="text-xl font-semibold mb-4 text-white">Comparison Chart (Altitude)</h2>
+      <canvas id="compareChart" height="100" class="bg-white p-2 rounded"></canvas>
+    </section>
+  </main>
+
+  <script type="module">
+    import { simulateRocket } from './script/physics.js';
+    import { loadConfigurations } from './script/storage.js';
+
+    let allConfigs = loadConfigurations();
+    const configListDiv = document.getElementById("configList");
+
+    allConfigs.forEach((cfg, index) => {
+      const box = document.createElement("div");
+      box.innerHTML = `
+        <label class="flex items-center gap-2">
+          <input type="checkbox" value="${index}" class="form-checkbox" />
+          <span class="text-white">Rocket ${index + 1} — ${cfg.engineType}, ${cfg.mass} kg, ${cfg.thrust} N</span>
+        </label>`;
+      configListDiv.appendChild(box);
+    });
+
+    document.getElementById("compareBtn").addEventListener("click", () => {
+      const selected = [...document.querySelectorAll("input[type=checkbox]:checked")]
+        .map(cb => parseInt(cb.value));
+
+      if (selected.length < 2) {
+        alert("Select at least two configurations.");
+        return;
+      }
+
+      const ctx = document.getElementById("compareChart").getContext("2d");
+
+      if (window.compareChart) window.compareChart.destroy();
+
+      const datasets = selected.map(i => {
+        const sim = simulateRocket(allConfigs[i]);
+        return {
+          label: `Config ${i + 1}`,
+          data: sim.altitude,
+          borderColor: getRandomColor(),
+          fill: false,
+          tension: 0.3
+        };
+      });
+
+      window.compareChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: Array.from({ length: datasets[0].data.length }, (_, i) => i),
+          datasets
+        },
+        options: {
+          scales: {
+            x: { title: { display: true, text: 'Time (s)' } },
+            y: { title: { display: true, text: 'Altitude (m)' } }
+          },
+          plugins: {
+            legend: { labels: { color: 'white' } }
+          }
+        }
+      });
+    });
+
+    function getRandomColor() {
+      const r = () => Math.floor(Math.random() * 255);
+      return `rgb(${r()},${r()},${r()})`;
+    }
+  </script>
+</body>
+</html>

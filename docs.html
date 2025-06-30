@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rocket Science Docs</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-900 text-white font-sans">
+
+  <nav class="bg-gray-800 p-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold text-blue-400">Rocket Science Docs</h1>
+    <div class="space-x-4">
+      <a href="index.html" class="hover:text-blue-300">Simulator</a>
+      <a href="compare.html" class="hover:text-blue-300">Compare</a>
+      <a href="report.html" class="hover:text-blue-300">Reports</a>
+      <a href="docs.html" class="hover:text-blue-300 font-semibold underline">Docs</a>
+    </div>
+  </nav>
+
+  <main class="p-6 max-w-4xl mx-auto space-y-8">
+    <section>
+      <h2 class="text-2xl font-semibold text-blue-300">1. Tsiolkovsky Rocket Equation</h2>
+      <p class="mt-2 text-gray-300">
+        The fundamental formula for ideal rocket motion is:
+        <br>
+        <strong>Δv = Isp × g₀ × ln(m₀ / m₁)</strong>
+        <br>
+        Where:
+        <ul class="list-disc list-inside mt-2">
+          <li><strong>Isp</strong> = Specific impulse (s)</li>
+          <li><strong>g₀</strong> = 9.81 m/s² (Earth gravity)</li>
+          <li><strong>m₀</strong> = Initial total mass</li>
+          <li><strong>m₁</strong> = Final mass after fuel burn</li>
+        </ul>
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-semibold text-blue-300">2. Gravity Turn</h2>
+      <p class="mt-2 text-gray-300">
+        A technique used to pitch the rocket gradually during ascent. This allows it to use gravity to curve its path efficiently
+        and reach orbit with minimum fuel. We simulate this using angle and velocity vectors.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-semibold text-blue-300">3. Atmospheric Drag</h2>
+      <p class="mt-2 text-gray-300">
+        Drag force is modeled with:
+        <br>
+        <strong>F<sub>drag</sub> = ½ × ρ × v² × C<sub>d</sub> × A</strong>
+        <br>
+        ρ is the air density (which decreases with altitude), C<sub>d</sub> is drag coefficient, A is cross-sectional area.
+        <br>
+        We approximate air density using:
+        <br>
+        <strong>ρ = ρ<sub>0</sub> × e<sup>−h / H</sup></strong> where H ≈ 8500 m
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-semibold text-blue-300">4. Staging</h2>
+      <p class="mt-2 text-gray-300">
+        Multi-stage rockets drop empty fuel tanks to reduce mass and increase efficiency. You can simulate basic staging by increasing the number of stages — a full implementation would model stage mass, ISP, and burn time separately.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-semibold text-blue-300">5. Delta-V Budget</h2>
+      <p class="mt-2 text-gray-300">
+        Delta-V (Δv) is the total change in velocity needed to reach orbit. For Low Earth Orbit, ~9400 m/s is typically required.
+        <br>
+        Our simulator helps estimate how close your configuration gets based on thrust, ISP, mass, and burn time.
+      </p>
+    </section>
+
+    <footer class="mt-10 text-center text-gray-500 text-sm">
+      &copy; 2025 RocketSim Project — Educational Use Only
+    </footer>
+  </main>
+
+</body>
+</html>
