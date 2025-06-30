@@ -5,10 +5,13 @@
   <title>Rocket Launch Simulator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- TailwindCSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
 
+  <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+  <!-- jsPDF and FileSaver for export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 </head>
@@ -51,22 +54,15 @@
       <button id="exportPdfBtn" class="bg-purple-600 hover:bg-purple-800 px-4 py-2 rounded">Download PDF</button>
     </div>
 
-    <div class="mt-8 bg-gray-800 p-6 rounded grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="bg-white p-2 rounded">
-        <canvas id="altitudeChart" height="200"></canvas>
-      </div>
-      <div class="bg-white p-2 rounded">
-        <canvas id="velocityChart" height="200"></canvas>
-      </div>
-      <div class="bg-white p-2 rounded">
-        <canvas id="accelerationChart" height="200"></canvas>
-      </div>
+    <div class="mt-8 bg-gray-800 p-6 rounded">
+      <canvas id="telemetryChart" height="100" class="bg-white p-2 rounded mb-6"></canvas>
     </div>
   </main>
 
+  <!-- Inline JavaScript -->
   <script>
     const g0 = 9.81;
-    let altitudeChart, velocityChart, accelerationChart;
+    let chart;
 
     document.getElementById("simulateBtn").addEventListener("click", () => {
       const mass = parseFloat(document.getElementById("mass").value);
@@ -80,49 +76,34 @@
 
       const initialMass = mass + fuel;
       const burnTime = (fuel * isp * g0) / thrust;
+      const deltaV = isp * g0 * Math.log(initialMass / mass);
 
       // Basic simulation
       const telemetry = [];
       let time = 0, dt = 0.5;
-      let velocity = 0, altitude = 0, acceleration = 0;
+      let velocity = 0, altitude = 0;
       let currentMass = initialMass;
 
-      // Store previous acceleration for calculating current acceleration in the loop
-      let prevAcceleration = 0;
-
       while (currentMass > mass) {
-        // Calculate drag force
-        const dragForce = 0.5 * 1.225 * velocity ** 2 * cd * area;
-        // Calculate net force
-        const netForce = thrust - dragForce - currentMass * g0;
-        // Calculate acceleration
-        acceleration = netForce / currentMass;
-        velocity += acceleration * dt;
+        const acc = (thrust - 0.5 * 1.225 * velocity ** 2 * cd * area - currentMass * g0) / currentMass;
+        velocity += acc * dt;
         altitude += velocity * dt;
         currentMass -= (fuel / burnTime) * dt;
         time += dt;
-        telemetry.push({ time, velocity, altitude, acceleration });
-
-        // A very simple approximation for max Q (maximum dynamic pressure).
-        // For a more accurate Max Q, you'd need to track dynamic pressure (0.5 * rho * v^2)
-        // and find its peak. Here we'll just log it for demonstration if you wanted to expand.
-        // const dynamicPressure = 0.5 * 1.225 * velocity ** 2; // For constant density, simplify.
+        telemetry.push({ time, velocity, altitude });
       }
 
-      drawCharts(telemetry);
+      drawChart(telemetry);
       window.latestTelemetry = telemetry; // for export
     });
 
-    function drawCharts(data) {
+    function drawChart(data) {
+      const ctx = document.getElementById('telemetryChart').getContext('2d');
       const labels = data.map(d => d.time.toFixed(1));
       const altitudes = data.map(d => d.altitude.toFixed(2));
-      const velocities = data.map(d => d.velocity.toFixed(2));
-      const accelerations = data.map(d => d.acceleration.toFixed(2));
 
-      // Altitude Chart
-      const altitudeCtx = document.getElementById('altitudeChart').getContext('2d');
-      if (altitudeChart) altitudeChart.destroy();
-      altitudeChart = new Chart(altitudeCtx, {
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
         type: 'line',
         data: {
           labels,
@@ -131,89 +112,17 @@
             data: altitudes,
             backgroundColor: 'rgba(59, 130, 246, 0.2)',
             borderColor: 'rgba(59, 130, 246, 1)',
-            borderWidth: 2,
-            fill: true
+            borderWidth: 2
           }]
         },
         options: {
           responsive: true,
           plugins: {
-            legend: { labels: { color: 'black' } },
-            title: {
-              display: true,
-              text: 'Altitude vs. Time',
-              color: 'black'
-            }
+            legend: { labels: { color: 'black' } }
           },
           scales: {
             x: { title: { display: true, text: 'Time (s)', color: 'black' }, ticks: { color: 'black' } },
-            y: { title: { display: true, text: 'Altitude (m)', color: 'black' }, ticks: { color: 'black' }, beginAtZero: true }
-          }
-        }
-      });
-
-      // Velocity Chart
-      const velocityCtx = document.getElementById('velocityChart').getContext('2d');
-      if (velocityChart) velocityChart.destroy();
-      velocityChart = new Chart(velocityCtx, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Velocity (m/s)',
-            data: velocities,
-            backgroundColor: 'rgba(34, 197, 94, 0.2)',
-            borderColor: 'rgba(34, 197, 94, 1)',
-            borderWidth: 2,
-            fill: true
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { labels: { color: 'black' } },
-            title: {
-              display: true,
-              text: 'Velocity vs. Time',
-              color: 'black'
-            }
-          },
-          scales: {
-            x: { title: { display: true, text: 'Time (s)', color: 'black' }, ticks: { color: 'black' } },
-            y: { title: { display: true, text: 'Velocity (m/s)', color: 'black' }, ticks: { color: 'black' }, beginAtZero: true }
-          }
-        }
-      });
-
-      // Acceleration Chart
-      const accelerationCtx = document.getElementById('accelerationChart').getContext('2d');
-      if (accelerationChart) accelerationChart.destroy();
-      accelerationChart = new Chart(accelerationCtx, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Acceleration (m/s²)',
-            data: accelerations,
-            backgroundColor: 'rgba(234, 179, 8, 0.2)',
-            borderColor: 'rgba(234, 179, 8, 1)',
-            borderWidth: 2,
-            fill: true
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { labels: { color: 'black' } },
-            title: {
-              display: true,
-              text: 'Acceleration vs. Time',
-              color: 'black'
-            }
-          },
-          scales: {
-            x: { title: { display: true, text: 'Time (s)', color: 'black' }, ticks: { color: 'black' } },
-            y: { title: { display: true, text: 'Acceleration (m/s²)', color: 'black' }, ticks: { color: 'black' } }
+            y: { title: { display: true, text: 'Altitude (m)', color: 'black' }, ticks: { color: 'black' } }
           }
         }
       });
@@ -222,8 +131,8 @@
     document.getElementById("exportCsvBtn").addEventListener("click", () => {
       const data = window.latestTelemetry || [];
       if (data.length === 0) return alert("Run simulation first.");
-      const rows = data.map(d => `${d.time},${d.velocity},${d.altitude},${d.acceleration}`);
-      const csv = "Time (s),Velocity (m/s),Altitude (m),Acceleration (m/s²)\n" + rows.join("\n");
+      const rows = data.map(d => `${d.time},${d.velocity},${d.altitude}`);
+      const csv = "Time,Velocity,Altitude\n" + rows.join("\n");
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       saveAs(blob, "telemetry.csv");
     });
@@ -233,7 +142,7 @@
       const data = window.latestTelemetry || [];
       doc.text("Rocket Telemetry Report", 10, 10);
       data.slice(0, 30).forEach((d, i) => {
-        doc.text(`${d.time}s | V: ${d.velocity.toFixed(2)} m/s | Alt: ${d.altitude.toFixed(2)} m | Acc: ${d.acceleration.toFixed(2)} m/s²`, 10, 20 + i * 6);
+        doc.text(`${d.time}s  |  V: ${d.velocity.toFixed(2)} m/s  |  Alt: ${d.altitude.toFixed(2)} m`, 10, 20 + i * 6);
       });
       doc.save("report.pdf");
     });
